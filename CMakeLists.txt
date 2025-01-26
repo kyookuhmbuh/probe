@@ -37,12 +37,14 @@ file(GLOB_RECURSE cpp_files
     "${CMAKE_CURRENT_SOURCE_DIR}/source/**.cpp"
 )
 list(REMOVE_DUPLICATES cpp_files)
+list(FILTER cpp_files EXCLUDE REGEX ".*/_.*")
 
 file(GLOB_RECURSE target_configs 
     LIST_DIRECTORIES false
     CONFIGURE_DEPENDS 
     "${CMAKE_CURRENT_SOURCE_DIR}/source/**.cmake"
 )
+list(FILTER target_configs EXCLUDE REGEX ".*/_.*")
 
 # ===================================================================
 # 4. MAIN FUNCTION DETECTION

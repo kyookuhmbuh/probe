@@ -50,6 +50,7 @@ probe/
   - Automatically loaded if a file with the same base name as the source file exists.
   - Example: `app.cpp` → `app.cmake`.
   - Use this to add custom `target_link_libraries`, `target_compile_definitions`, etc.
+  - Files and directories starting with `_` are **ignored** (e.g., `_internal.cpp`, `_private/`).
 
 ## Example
 ### Source File (`source/app.cpp`)
