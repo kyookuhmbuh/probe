@@ -42,7 +42,7 @@ file(GLOB_RECURSE cpp_files
 # ===================================================================
 function(has_main_function file_path result)
     file(READ "${file_path}" content LIMIT 2048)
-    string(REGEX MATCH "int[ \t\r\n]+main[ \t\r\n]*[({]" found "${content}")
+    string(REGEX MATCH "(int|auto)[ \t\r\n]+main[ \t\r\n]*[({]" found "${content}")
     set(${result} "${found}" PARENT_SCOPE)
 endfunction()
 
