@@ -36,6 +36,13 @@ file(GLOB_RECURSE cpp_files
     CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/source/**.cpp"
 )
+list(REMOVE_DUPLICATES cpp_files)
+
+file(GLOB_RECURSE target_configs 
+    LIST_DIRECTORIES false
+    CONFIGURE_DEPENDS 
+    "${CMAKE_CURRENT_SOURCE_DIR}/source/**.cmake"
+)
 
 # ===================================================================
 # 4. MAIN FUNCTION DETECTION
@@ -77,7 +84,23 @@ function(get_target_name out_var file_path)
 endfunction()
 
 # ===================================================================
-# 7. LIBRARY CREATION
+# 7. TARGET CONFIGURATION LOADER
+# ===================================================================
+function(load_target_config target_name source_file config_extension)
+    get_filename_component(exec_dir "${source_file}" DIRECTORY)
+    get_filename_component(exec_name_we "${source_file}" NAME_WE)
+    set(target_config "${exec_dir}/${exec_name_we}.${config_extension}")
+
+    if(EXISTS "${target_config}")
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${target_config}")
+        message(STATUS "Loading config for ${target_name}: ${target_config}")
+        set(CURRENT_TARGET "${target_name}")
+        include("${target_config}")
+    endif()
+endfunction()
+
+# ===================================================================
+# 8. LIBRARY CREATION
 # ===================================================================
 set(lib_targets "")
 
@@ -94,14 +117,16 @@ foreach(lib_file IN LISTS lib_sources)
     
     target_include_directories("${target_name}"
         PUBLIC "$<BUILD_INTERFACE:${INCLUDE_PUBLIC_ABS}>"
-        PRIVATE "$<BUILD_INTERFACE:${INCLUDE_PRIVATE_ABS}>"
     )
 
     list(APPEND lib_targets "${target_name}")
+
+    # Loading the config for the target
+    load_target_config("${target_name}" "${lib_file}" "cmake")
 endforeach()
 
 # ===================================================================
-# 8. EXECUTABLE CREATION
+# 9. EXECUTABLE CREATION
 # ===================================================================
 foreach(exec_file IN LISTS exec_sources)
     get_target_name(target_name "${exec_file}")
@@ -116,7 +141,6 @@ foreach(exec_file IN LISTS exec_sources)
 
     target_include_directories("${target_name}"
         PUBLIC "${INCLUDE_PUBLIC_ABS}"
-        PRIVATE "${INCLUDE_PRIVATE_ABS}"
     )
     
     if(lib_targets)
@@ -125,10 +149,13 @@ foreach(exec_file IN LISTS exec_sources)
             "$<TARGET_OBJECTS:${lib_targets}>"
         )
     endif()
+
+     # Loading the config for the target
+     load_target_config("${target_name}" "${exec_file}" "cmake")
 endforeach()
 
 # ===================================================================
-# 9. FINAL CHECKS
+# 10. FINAL CHECKS
 # ===================================================================
 if(NOT cpp_files)
     message(WARNING "No source files found in: ${CMAKE_CURRENT_SOURCE_DIR}/source")
@@ -140,7 +167,7 @@ if(NOT exec_sources AND cpp_files)
 endif()
 
 # ===================================================================
-# 10. CODE FORMATTING (CLANG-FORMAT)
+# 11. CODE FORMATTING (CLANG-FORMAT)
 # ===================================================================
 find_program(CLANG_FORMAT_EXE NAMES "clang-format" "clang-format-15" "clang-format-14")
 
