@@ -8,22 +8,15 @@ CMake template for rapid prototyping and testing C++ code snippets.
 - Integrated Clang-Formatting
 - C++20 by default
 - Cross-platform support
-- **Per-target configuration** via `.cmake` files
+- **Per-target compile definitions** via `.cfg` files
 - Automatic reconfiguration on file changes
+- Automatic code formating before building
 
 ## Usage
 ### Configure the project and build all targets
 ```bash
 cmake -B build
 cmake --build build
-```
-### Format verification
-```bash
-cmake --build build --target check-format
-```
-### Auto-format code
-```bash
-cmake --build build --target format
 ```
 
 ## Project Structure
@@ -47,36 +40,24 @@ probe/
 - Files and directories starting with `_` are **ignored** (e.g., `_internal.cpp`, `_private/`).
 
 ### Configuration Files (`source/`)
-- **`<name>.cmake`**: Per-target configuration.
+- **`<name>.cfg`**: Per-target compile definitions.
   - Automatically loaded if a file with the same base name as the source file exists.
-  - Example: `app.cpp` → `app.cmake`.
-  - Use this to add custom `target_link_libraries`, `target_compile_definitions`, etc.
+  - Example: `app.cpp` → `app.cfg`.
 
 ## Example
 ### Source File (`source/app.cpp`)
 ```cpp
 #include <iostream>
 
+int main()
+{
 #ifdef MY_CUSTOM_DEFINE
-    // ...
+  std::cout << "Hello, World!\n";
 #endif
-
-int main() {
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+  return 0;
 }
 ```
-### Configuration File (`source/app.cmake`)
-```cmake
-# Link additional libraries
-target_link_libraries(${CURRENT_TARGET} 
-    PRIVATE 
-    Threads::Threads
-)
-
-# Add compile definitions
-target_compile_definitions(${CURRENT_TARGET}
-    PRIVATE
-    -DMY_CUSTOM_DEFINE
-)
+### Configuration File (`source/app.cfg`)
+```cfg
+MY_CUSTOM_DEFINE=1
 ```
