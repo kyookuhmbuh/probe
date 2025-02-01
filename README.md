@@ -44,13 +44,13 @@ probe/
   - Files containing `main()` are built as **executables**.
   - Files without `main()` are compiled into **OBJECT libraries**.
 - **`*.h` / `*.hpp`**: Private headers (visible only within `source/`).
+- Files and directories starting with `_` are **ignored** (e.g., `_internal.cpp`, `_private/`).
 
 ### Configuration Files (`source/`)
 - **`<name>.cmake`**: Per-target configuration.
   - Automatically loaded if a file with the same base name as the source file exists.
   - Example: `app.cpp` → `app.cmake`.
   - Use this to add custom `target_link_libraries`, `target_compile_definitions`, etc.
-  - Files and directories starting with `_` are **ignored** (e.g., `_internal.cpp`, `_private/`).
 
 ## Example
 ### Source File (`source/app.cpp`)
