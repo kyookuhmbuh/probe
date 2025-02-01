@@ -1,7 +1,7 @@
 
 #include <iostream>
 
-#include <test_lib.hpp>
+#include <example.hpp>
 
 int main()
 {

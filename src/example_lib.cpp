@@ -1,4 +1,6 @@
 
+#include <example.hpp>
+
 #ifdef TEST_LIB
 int test_add(int a, int b) noexcept
 {
