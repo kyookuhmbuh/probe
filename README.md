@@ -25,7 +25,7 @@ probe/
 ├─ CMakeLists.txt    # Main CMake configuration
 ├─ cmake/            # Custom CMake scripts and modules
 ├─ include/          # Public headers (visible to all targets)
-└─ source/           # Implementation & private headers
+└─ src/              # Implementation & private headers
 ```
 
 ## File Types and Their Roles
