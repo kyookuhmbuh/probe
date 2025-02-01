@@ -25,27 +25,27 @@ probe/
 ├─ CMakeLists.txt    # Main CMake configuration
 ├─ cmake/            # Custom CMake scripts and modules
 ├─ include/          # Public headers (visible to all targets)
-└─ source/           # Implementation & private headers
+└─ src/              # Implementation & private headers
 ```
 
 ## File Types and Their Roles
 ### Public Headers (`include/`)
 - **`*.h` / `*.hpp`**: Public headers (visible to all targets and external projects).
 
-### Source Files (`source/`)
+### Source Files (`src/`)
 - **`*.cpp`**: Implementation files.
   - Files containing `main()` are built as **executables**.
   - Files without `main()` are compiled into **OBJECT libraries**.
-- **`*.h` / `*.hpp`**: Private headers (visible only within `source/`).
+- **`*.h` / `*.hpp`**: Private headers (visible only within `src/`).
 - Files and directories starting with `_` are **ignored** (e.g., `_internal.cpp`, `_private/`).
 
-### Configuration Files (`source/`)
+### Configuration Files (`src/`)
 - **`<name>.cfg`**: Per-target compile definitions.
   - Automatically loaded if a file with the same base name as the source file exists.
   - Example: `app.cpp` → `app.cfg`.
 
 ## Example
-### Source File (`source/app.cpp`)
+### Source File (`src/app.cpp`)
 ```cpp
 #include <iostream>
 
@@ -57,7 +57,7 @@ int main()
   return 0;
 }
 ```
-### Configuration File (`source/app.cfg`)
+### Configuration File (`src/app.cfg`)
 ```cfg
 MY_CUSTOM_DEFINE=1
 ```
