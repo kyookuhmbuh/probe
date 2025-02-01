@@ -15,8 +15,8 @@ function(format_target_sources target_name)
         add_custom_command(
             TARGET ${target_name}
             PRE_BUILD
-            COMMAND ${CLANG_FORMAT_EXE} -i ${abs_source}
-            COMMENT "Formatting ${abs_source}"
+            COMMAND "${CLANG_FORMAT_EXE}" --style=file -i "${abs_source}"
+            COMMENT "Formatting ${abs_source} with Clang-Format..."
             VERBATIM
         )
     endforeach()
@@ -39,8 +39,8 @@ function(format_target_sources target_name)
                 add_custom_command(
                     TARGET ${target_name}
                     PRE_BUILD
-                    COMMAND ${CLANG_FORMAT} -i ${abs_header_file}
-                    COMMENT "Formatting ${abs_header_file}"
+                    COMMAND "${CLANG_FORMAT_EXE}" --style=file -i "${abs_header_file}"
+                    COMMENT "Formatting ${abs_header_file} with Clang-Format..."
                     VERBATIM
                 )
             endforeach()
