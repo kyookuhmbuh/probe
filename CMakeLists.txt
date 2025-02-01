@@ -11,14 +11,16 @@ project(
 # 1. ADDITIONAL CONFIGURATIONS
 # ===================================================================
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+include(${CMAKE_MODULE_PATH}/target_compile_definitions_from_file.cmake)
+include(${CMAKE_MODULE_PATH}/code_formatting.cmake)
 
 # ===================================================================
 # 2. PATH AND DIRECTORY CONFIGURATION
 # ===================================================================
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
 # Check for required directories
-foreach(DIR IN ITEMS include source)
+foreach(DIR IN ITEMS include src)
     if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${DIR}")
         message(FATAL_ERROR "Required directory '${DIR}' not found!")
     endif()
@@ -26,7 +28,7 @@ endforeach()
 
 # Convert to absolute paths
 get_filename_component(INCLUDE_PUBLIC_ABS "${CMAKE_CURRENT_SOURCE_DIR}/include" ABSOLUTE)
-get_filename_component(INCLUDE_PRIVATE_ABS "${CMAKE_CURRENT_SOURCE_DIR}/source" ABSOLUTE)
+get_filename_component(INCLUDE_PRIVATE_ABS "${CMAKE_CURRENT_SOURCE_DIR}/src" ABSOLUTE)
 
 # ===================================================================
 # 3. SOURCE FILE DISCOVERY
@@ -34,7 +36,7 @@ get_filename_component(INCLUDE_PRIVATE_ABS "${CMAKE_CURRENT_SOURCE_DIR}/source" 
 file(GLOB_RECURSE cpp_files 
     LIST_DIRECTORIES false
     CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/source/**.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/**.cpp"
 )
 list(REMOVE_DUPLICATES cpp_files)
 list(FILTER cpp_files EXCLUDE REGEX ".*/_.*")
@@ -42,7 +44,7 @@ list(FILTER cpp_files EXCLUDE REGEX ".*/_.*")
 file(GLOB_RECURSE target_configs 
     LIST_DIRECTORIES false
     CONFIGURE_DEPENDS 
-    "${CMAKE_CURRENT_SOURCE_DIR}/source/**.cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/**.cfg"
 )
 list(FILTER target_configs EXCLUDE REGEX ".*/_.*")
 
@@ -77,7 +79,7 @@ endforeach()
 # ===================================================================
 function(get_target_name out_var file_path)
     file(RELATIVE_PATH rel_path 
-        "${CMAKE_CURRENT_SOURCE_DIR}/source" 
+        "${CMAKE_CURRENT_SOURCE_DIR}/src" 
         "${file_path}"
     )
     string(REPLACE "/" "_" target_name "${rel_path}")
@@ -95,9 +97,11 @@ function(load_target_config target_name source_file config_extension)
 
     if(EXISTS "${target_config}")
         set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${target_config}")
-        message(STATUS "Loading config for ${target_name}: ${target_config}")
-        set(CURRENT_TARGET "${target_name}")
-        include("${target_config}")
+        message(STATUS "Loading compile defintions for ${target_name}: ${target_config}")
+        target_compile_definitions_from_file(
+            TARGET ${target_name} 
+            SCOPE PRIVATE 
+            FILE "${target_config}")
     endif()
 endfunction()
 
@@ -118,13 +122,13 @@ foreach(lib_file IN LISTS lib_sources)
     target_compile_features("${target_name}" PUBLIC cxx_std_20)
     
     target_include_directories("${target_name}"
-        PUBLIC "$<BUILD_INTERFACE:${INCLUDE_PUBLIC_ABS}>"
+        PUBLIC ${INCLUDE_PUBLIC_ABS}
     )
 
     list(APPEND lib_targets "${target_name}")
 
     # Loading the config for the target
-    load_target_config("${target_name}" "${lib_file}" "cmake")
+    load_target_config("${target_name}" "${lib_file}" "cfg")
 endforeach()
 
 # ===================================================================
@@ -153,68 +157,20 @@ foreach(exec_file IN LISTS exec_sources)
     endif()
 
      # Loading the config for the target
-     load_target_config("${target_name}" "${exec_file}" "cmake")
+     load_target_config("${target_name}" "${exec_file}" "cfg")
+
+     # Format source files of the target
+     format_target_sources("${target_name}")
 endforeach()
 
 # ===================================================================
 # 10. FINAL CHECKS
 # ===================================================================
 if(NOT cpp_files)
-    message(WARNING "No source files found in: ${CMAKE_CURRENT_SOURCE_DIR}/source")
+    message(WARNING "No source files found in: ${CMAKE_CURRENT_SOURCE_DIR}/src")
 endif()
 
 if(NOT exec_sources AND cpp_files)
     list(LENGTH cpp_files NUM_FILES)
     message(WARNING "Found ${NUM_FILES} files but no main() functions!")
-endif()
-
-# ===================================================================
-# 11. CODE FORMATTING (CLANG-FORMAT)
-# ===================================================================
-find_program(CLANG_FORMAT_EXE NAMES "clang-format" "clang-format-15" "clang-format-14")
-
-if(CLANG_FORMAT_EXE)
-    # Create style file if missing
-    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.clang-format")
-        file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/.clang-format" 
-            "---\n"
-            "Language: Cpp\n"
-            "BasedOnStyle: LLVM\n"
-            "IndentWidth: 4\n"
-            "TabWidth: 4\n"
-            "UseTab: Never\n"
-            "BreakBeforeBraces: Allman\n"
-            "ColumnLimit: 120\n"
-        )
-        message(STATUS "Created default .clang-format file")
-    endif()
-
-    # Find all source files
-    file(GLOB_RECURSE all_sources 
-        LIST_DIRECTORIES false
-        CONFIGURE_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/source/*.[ch]pp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/source/*.[ch]"
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/*.[ch]pp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/*.[ch]"
-    )
-
-    # Remove duplicate entries
-    list(REMOVE_DUPLICATES all_sources)  
-
-    # Formatting target
-    add_custom_target(format
-        COMMAND ${CLANG_FORMAT_EXE} -i --style=file ${all_sources}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Formatting source files with Clang-Format..."
-    )
-
-    # Format verification target
-    add_custom_target(check-format
-        COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror --style=file ${all_sources}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Checking code format compliance..."
-    )
-else()
-    message(WARNING "Clang-Format not found! Formatting targets will be disabled")
 endif()
