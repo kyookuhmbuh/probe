@@ -4,13 +4,11 @@ CMake template for rapid prototyping and testing C++ code snippets.
 
 ## Features
 - Auto-detects source files with `main()`
-- Creates granular OBJECT libraries
-- Integrated Clang-Formatting
+- Integrated Clang-Formatting (automatic code formating before building)
 - C++20 by default
 - Cross-platform support
 - **Per-target compile definitions** via `.cfg` files
 - Automatic reconfiguration on file changes
-- Automatic code formating before building
 
 ## Usage
 ### Configure the project and build all targets
